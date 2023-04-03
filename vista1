@@ -1,0 +1,46 @@
+import spacy
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import sent_tokenize
+from collections import defaultdict
+from heapq import nlargest
+nltk.download('stopwords')
+nltk.download('punkt')
+# Load the language model
+import spacy.cli
+spacy.cli.download("en_core_web_lg")
+nlp = spacy.load("en_core_web_lg")
+
+
+# Define the stop words
+stop_words = set(stopwords.words("english"))
+
+# Define the number of sentences to be included in the summary
+NUM_SENTENCES = 10
+
+def summarize(text, input_word):
+    # Tokenize the text into sentences
+    sentences = sent_tokenize(text)
+
+    # Compute the score of each sentence based on the frequency of the input word in the sentence
+    score = defaultdict(int)
+    for i, sentence in enumerate(sentences):
+        # Tokenize the sentence and remove stop words
+        sentence_tokens = nlp(sentence)
+        sentence_words = [word.text.lower() for word in sentence_tokens if not word.is_stop]
+
+        # Compute the score of the sentence based on the frequency of the input word in the sentence
+        if input_word in sentence_words:
+            score[i] += 1
+
+        # Compute the similarity between the sentence and the sentences that contain the input word
+        for j in range(i):
+            if score[j] > 0:
+                similarity = sentence_tokens.similarity(nlp(sentences[j]))
+                score[i] += similarity
+
+    # Select the top N sentences with the highest scores
+    top_sentences = nlargest(NUM_SENTENCES, score, key=score.get)
+    summary = " ".join([sentences[i] for i in top_sentences])
+
+    return summary
