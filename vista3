@@ -1,0 +1,29 @@
+import spacy
+import spacy.cli
+spacy.cli.download("en_core_web_sm")
+# Load the pre-trained English language model
+nlp = spacy.load("en_core_web_sm")
+
+# Define the given word and article
+given_word = "McKinsey"
+article = "Technology has transformed every aspect of our lives, from the way we work to the way we communicate and access information. In recent years, advances in technology have led to new opportunities and challenges in fields such as healthcare, finance, and education. As we continue to embrace new technologies, it is important to consider their impact on society and the environment."
+article="""Bain India has been one of the fastest growing consulting practices in the world within the Bain ecosystem with a more than 20% year-on-year growth rate through the last eight years and currently is the largest in Asia-Pacific, said Parijat Ghosh, the managing partner-designate of the firm.Ghosh will take over the corner office at Bain India from incumbent Karan Singh, who will be elevated to chairmanship from April 1, 2023. “The last two years have been faster than our average growth rates. We are looking to more than double our revenue in the next five years. We have seen 3X growth in our talent base over the last five years,” Ghosh told ET in an interview. The firm started operations in India in 2006 and currently has about 60 partners and more than 1,000 consultants. Apart from them, it employs 2,000 people at its global capability centre in Gurgaon that provides back-office services to Bain’s global operations. Ghosh said consulting growth would be driven by multiple trends running simultaneously in the economy. “Fundamentally, we believe that India is a multi-decade growth opportunity. Companies in general are facing both an unprecedented period of disruption and at the same time, opportunity, and that's where Bain can come in to help clients navigate. We are helping clients figure out how to capitalise on the India opportunity by tapping into the significant digital economy, helping companies enter new markets, new customer segments, and new opportunities,” he said. Promoters reshaping business portfolios for the future, companies adopting the China-plus-one strategy, sectors like electric vehicles and renewables, and businesses adopting elements of digital transformation will all add to demand for consultants, he said. “Opportunities lie in both sector and capability views, with growth and customer transformation being strong cross-sector opportunities. Tech services, consumer, financial investors, and healthcare are all strong sectors, and for Bain a repeatable model exists for entering and driving breakthrough growth in new sectors,” Ghosh said. A big shift in client briefs in recent times has been that mandates have shifted from cost-cutting to growth-oriented strategies as the Covid-19 pandemic has receded.“In general, clients expect that we will be able to bring in high-quality proprietary insights that create value for them. There is also an expectation of bringing an integrated set of expertise across capabilities and geographies, especially for cross-border opportunities. Another thing we have done well is working with clients to not only define the ambition but also help realise it efficiently,” said Ghosh. The consulting sector had faced a talent crunch after demand exploded post the Covid-19 pandemic, but the situation is stabilising now.“There has been a talent crunch in the consulting industry in India in the last few years, particularly post-Covid due to the surge in demand and growth rate. However, we believe that this situation will settle down in the longer term,” said Ghosh. Apart from selective lateral hires, Bain hired about 250 students from campuses last year and is looking at similar numbers in 2023.On rising competition in consulting amid aggressive strategies by McKinsey, BCG and the Big Four consulting arms, Ghosh said the sector in India still had massive untapped potential, with a robust external demand environment for services that include expertise from different areas.On the outlook for 2023, Ghosh said there was cautious optimism about the growth prospects for India, given the global situation with inflation, etc. “However, overall, there is still a bullish outlook for the medium to long term growth prospects for India. Bain continues to view 2023 as a growth year, but also acknowledges the need to be careful and aware of the macro environment,"""
+# Perform named entity recognition on the article
+doc = nlp(article)
+named_entities = [ent.text.lower() for ent in doc.ents]
+
+# Check if the given word is a named entity in the article
+if given_word.lower() in named_entities:
+    print(f"{given_word} is a named entity in the article.")
+else:
+    print(f"{given_word} is not a named entity in the article.")
+
+# Perform dependency parsing on the article
+for sent in doc.sents:
+    for token in sent:
+        if token.text.lower() == given_word.lower():
+            if token.dep_ == "nsubj":
+                print(f"{given_word} is the subject of the sentence: {sent.text}")
+            elif token.head.text.lower() == "is" and token.head.dep_ == "ROOT":
+                print(f"{given_word} is the main subject of the article.")
+                break
