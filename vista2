@@ -1,0 +1,31 @@
+import nltk
+from nltk.tokenize import sent_tokenize
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+# Download necessary NLTK data
+nltk.download('punkt')
+
+def summarize(text, input_word, n=3):
+    """
+    Summarizes a given text by selecting the n most relevant sentences
+    that are most similar to the sentences containing the input word.
+    """
+    # Tokenize the text into sentences
+    sentences = sent_tokenize(text)
+
+    # Vectorize the sentences using TF-IDF
+    vectorizer = TfidfVectorizer()
+    sentence_vectors = vectorizer.fit_transform(sentences)
+
+    # Calculate the cosine similarity between each sentence and the sentences containing the input word
+    input_sentences = [sentence for sentence in sentences if input_word in sentence]
+    input_vectors = vectorizer.transform(input_sentences)
+    similarities = cosine_similarity(input_vectors, sentence_vectors)
+
+    # Select the n most similar sentences
+    indices = similarities.argsort()[:, -n:].flatten()
+    indices = sorted(indices)
+    summary = [sentences[i] for i in indices]
+
+    return ' '.join(summary)
