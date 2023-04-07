@@ -1,0 +1,42 @@
+import nltk
+from nltk.tokenize import sent_tokenize
+import numpy as np
+from gensim.models import KeyedVectors
+
+# Download necessary NLTK data
+nltk.download('punkt')
+
+# Load pre-trained GloVe embeddings
+glove_path = "/path/to/glove.6B.100d.txt"  # Replace with the path to your GloVe file
+word_vectors = KeyedVectors.load_word2vec_format(glove_path, binary=False)
+
+def summarize(text, input_word, n=3):
+    """
+    Summarizes a given text by selecting the n most relevant sentences
+    that are most similar to the sentences containing the input word.
+    """
+    # Tokenize the text into sentences
+    sentences = sent_tokenize(text)
+
+    # Calculate the mean GloVe vector for each sentence
+    sentence_vectors = []
+    for sentence in sentences:
+        words = nltk.word_tokenize(sentence.lower())
+        vectors = [word_vectors[word] for word in words if word in word_vectors.vocab]
+        if vectors:
+            sentence_vectors.append(np.mean(vectors, axis=0))
+        else:
+            sentence_vectors.append(np.zeros(word_vectors.vector_size))
+
+    # Calculate the cosine similarity between each sentence and the sentences containing the input word
+    input_sentences = [sentence for sentence in sentences if input_word in sentence.lower()]
+    if not input_sentences:
+        return "No sentences containing the input word were found."
+    input_vectors = [np.mean([word_vectors[word] for word in nltk.word_tokenize(sentence.lower()) if word in word_vectors.vocab], axis=0) for sentence in input_sentences]
+    similarities = np.dot(input_vectors, np.array(sentence_vectors).T)
+
+    # Select the n most similar sentences
+    indices = similarities.argsort()[::-1][:n]
+    summary = [sentences[i] for i in indices]
+
+    return ' '.join(summary)
