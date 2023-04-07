@@ -1,0 +1,34 @@
+import nltk
+from nltk.tokenize import sent_tokenize
+from sentence_transformers import SentenceTransformer
+
+# Download necessary NLTK data
+nltk.download('punkt')
+
+# Load pre-trained BERT model
+model_name = 'bert-base-nli-mean-tokens'
+model = SentenceTransformer(model_name)
+
+def summarize(text, input_word, n=3):
+    """
+    Summarizes a given text by selecting the n most relevant sentences
+    that are most similar to the sentences containing the input word.
+    """
+    # Tokenize the text into sentences
+    sentences = sent_tokenize(text)
+
+    # Calculate the BERT embedding for each sentence
+    sentence_embeddings = model.encode(sentences)
+
+    # Calculate the cosine similarity between each sentence and the sentences containing the input word
+    input_sentences = [sentence for sentence in sentences if input_word in sentence.lower()]
+    if not input_sentences:
+        return "No sentences containing the input word were found."
+    input_embeddings = model.encode(input_sentences)
+    similarities = input_embeddings.dot(sentence_embeddings.T)
+
+    # Select the n most similar sentences
+    indices = similarities.argsort()[::-1][:n]
+    summary = [sentences[i] for i in indices]
+
+    return ' '.join(summary)
