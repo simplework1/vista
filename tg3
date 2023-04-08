@@ -1,0 +1,30 @@
+import spacy
+import transformers
+
+# Load the pre-trained NLP model
+nlp = spacy.load("en_core_web_sm")
+
+# Load the Hugging Face co-reference resolution model
+hf_model = transformers.pipeline("coref-resolution", model="dmis-lab/biobert-large-cased-v1.1")
+
+# Define the input text
+input_text = "The cat sat on the mat. It was tired."
+
+# Define the input word
+input_word = "cat"
+
+# Process the input text with spaCy
+doc = nlp(input_text)
+
+# Iterate over the sentences in the processed document
+for sent in doc.sents:
+    # Iterate over the words in the sentence
+    for token in sent:
+        # Check if the word matches the input word
+        if token.text == input_word:
+            # Use the Hugging Face co-reference resolution model to find related sentences
+            resolved = hf_model(sent.text)
+            # Print the related sentence(s)
+            for coref in resolved[0]['references']:
+                if coref['text'] != sent.text:
+                    print(coref['text'])
