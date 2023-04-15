@@ -1,0 +1,63 @@
+import spacy
+import pandas as pd
+
+# Load the pre-trained English language model
+nlp = spacy.load("en_core_web_sm")
+
+# Define the function to extract the context of the input word
+def extract_context(text, word):
+    # Parse the text using spaCy
+    doc = nlp(text)
+    # Resolve coreferences in the document
+    doc = nlp(" ".join([str(tok._.coref_clusters[0].main) if tok._.in_coref else str(tok) for tok in doc]))
+    # Find the tokens that match the input word
+    tokens = []
+    for tok in doc:
+        if tok.text.lower() == word.lower():
+            tokens.append(tok)
+    if not tokens:
+        return None
+    # Get the subtrees of each token that contain its context
+    subtrees = []
+    for token in tokens:
+        subtree = list(token.subtree)
+        # Remove the input word from the subtree
+        subtree = [tok for tok in subtree if tok.text.lower() != word.lower()]
+        subtrees.append(subtree)
+    # Return the contexts as a list of strings
+    return [" ".join([tok.text for tok in subtree]) for subtree in subtrees]
+
+# Example usage
+text = "TCS announced that it has acquired BridgePoint Group."
+word = "TCS"
+contexts = extract_context(text, word)
+print(contexts)
+# Output: ["announced that it has acquired BridgePoint Group."]
+
+# Load the labeled dataset
+dataset = pd.read_csv("labeled_dataset.csv")
+
+# Extract the contexts of the input words
+contexts = []
+for i, row in dataset.iterrows():
+    context = extract_context(row["text"], row["input_word"])
+    if context is not None:
+        contexts.extend(context)
+    else:
+        contexts.append("")
+
+# Train a binary classifier to predict relevance based on the contexts
+# (you can use any classifier of your choice, e.g., logistic regression,
+# SVM, neural network, etc.)
+
+# Example training with logistic regression
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+
+# Vectorize the contexts using TF-IDF
+vectorizer = TfidfVectorizer()
+X = vectorizer.fit_transform(contexts)
+# Train a logistic regression classifier
+y = dataset["relevant"]
+clf = LogisticRegression()
+clf.fit(X, y)
