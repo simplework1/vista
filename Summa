@@ -1,0 +1,39 @@
+!pip install transformers
+import torch
+from transformers import BertTokenizer, BertForSequenceClassification
+
+# Load pre-trained model
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+model = BertForSequenceClassification.from_pretrained('bert-base-uncased')
+
+# Article to summarize
+article = "This is a long article that contains many sentences. One of these sentences mentions the input word, which is 'Microsoft'. We want to extract the most relevant sentences that contain this word."
+
+# Input word
+input_word = "Microsoft"
+
+# Tokenize the article
+inputs = tokenizer(article, return_tensors='pt', padding=True, truncation=True)
+
+# Get the indices of the input word in the tokenized input
+word_indices = [i for i, x in enumerate(inputs['input_ids'][0].tolist()) if x == tokenizer.encode(input_word)[1]]
+
+# Get the output of the pre-trained model
+outputs = model(inputs['input_ids'], attention_mask=inputs['attention_mask'])[0]
+
+# Extract the most relevant sentences that contain the input word
+relevant_sentences = []
+for i in range(len(outputs)):
+    if i in word_indices:
+        relevance_score = outputs[i][1].item()
+        sentence = tokenizer.decode(inputs['input_ids'][0][i:i+32])
+        relevant_sentences.append((sentence, relevance_score))
+
+# Sort the relevant sentences by relevance score
+relevant_sentences = sorted(relevant_sentences, key=lambda x: x[1], reverse=True)
+
+# Extract the top N most relevant sentences
+top_sentences = [x[0] for x in relevant_sentences[:3]]
+
+# Print the top N most relevant sentences
+print(top_sentences)
