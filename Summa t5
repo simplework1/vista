@@ -1,0 +1,23 @@
+from transformers import T5Tokenizer, T5ForConditionalGeneration
+import torch
+
+# Load the pre-trained T5 model and tokenizer
+model = T5ForConditionalGeneration.from_pretrained('t5-base')
+tokenizer = T5Tokenizer.from_pretrained('t5-base')
+
+# Define the input article and input word
+article = "The internet giant Google has announced plans to acquire the fitness tracking company Fitbit for $2.1bn. The acquisition will give Google access to Fitbit's extensive health data, which it could use to improve its products and services in the healthcare industry."
+input_word = "Google"
+
+# Create the input string for the T5 model
+input_string = f"summarize: {article} | about: {input_word}"
+
+# Tokenize the input string and encode it as input_ids for the T5 model
+input_ids = tokenizer.encode(input_string, return_tensors='pt')
+
+# Generate the summary using the T5 model
+summary_ids = model.generate(input_ids, num_beams=4, max_length=50, early_stopping=True)
+summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+
+# Print the summary
+print(summary)
