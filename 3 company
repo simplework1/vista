@@ -1,0 +1,38 @@
+import spacy
+from spacy.matcher import Matcher
+
+nlp = spacy.load('en_core_web_sm')
+
+# Define the company name as a list of individual words
+company_name = ['Boston', 'Consultancy', 'Group']
+
+# Create the pattern to match the company name
+pattern = [{'LOWER': word.lower()} for word in company_name]
+
+# Initialize the Matcher with the pattern
+matcher = Matcher(nlp.vocab)
+matcher.add('company_name', None, pattern)
+
+# Define a function to merge the resulting entities
+def merge_company_name(doc):
+    matches = matcher(doc)
+    spans = []
+    for match_id, start, end in matches:
+        spans.append(doc[start:end])
+    for span in spans:
+        span.merge()
+    return doc
+
+# Add the merge_company_name function to the pipeline
+nlp.add_pipe(merge_company_name, after='parser')
+
+# Define the sentence to be parsed
+sentence = "I met with someone from Boston Consultancy Group yesterday."
+
+# Parse the sentence with the modified spaCy pipeline
+doc = nlp(sentence)
+
+# Print out the dependency parse tree with the merged company name
+for token in doc:
+    print(token.text, token.dep_, token.head.text, token.head.pos_,
+          [child for child in token.children])
