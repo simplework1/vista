@@ -1,0 +1,31 @@
+import spacy
+
+nlp = spacy.load("en_core_web_sm")
+
+sentence = "Cyberabad police issued notices to Big Basket, Phone Pe, Facebook and Tech Mahindra."
+doc = nlp(sentence)
+
+# Find the root token of the sentence
+root_token = [token for token in doc if token.head == token][0]
+
+# Find the immediate dependent of the root token
+immediate_dependents = []
+for child in root_token.children:
+    if child.dep_ != "punct":
+        immediate_dependents.append(child)
+        if child.text.endswith(","):
+            # Find all subsequent children of the root token until a non-comma child is encountered
+            while True:
+                next_child = next((c for c in child.rights if c.dep_ != "punct"), None)
+                if next_child is None or not next_child.text.endswith(","):
+                    break
+                immediate_dependents.append(next_child)
+
+# Find the dependency label of each immediate dependent with respect to the root token
+deps_with_respect_to_root = []
+for dependent in immediate_dependents:
+    dep_with_respect_to_root = dependent.dep_ if dependent != root_token else "ROOT"
+    deps_with_respect_to_root.append(dep_with_respect_to_root)
+
+print("Immediate dependents with respect to root:", immediate_dependents)
+print("Dependency labels of immediate dependents with respect to root:", deps_with_respect_to_root)
