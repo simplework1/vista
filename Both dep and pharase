@@ -1,0 +1,62 @@
+import spacy
+from spacy.matcher import Matcher
+
+nlp = spacy.load('en_core_web_sm')
+
+# Define the company name as a list of individual words
+company_name = ['Boston', 'Consultancy', 'Group']
+
+# Create the pattern to match the company name
+pattern = [{'LOWER': word.lower()} for word in company_name]
+
+# Initialize the Matcher with the pattern
+matcher = Matcher(nlp.vocab)
+matcher.add('company_name', None, pattern)
+
+# Define a function to merge the resulting entities
+def merge_company_name(doc):
+    matches = matcher(doc)
+    spans = []
+    for match_id, start, end in matches:
+        spans.append(doc[start:end])
+    for span in spans:
+        span.merge()
+    return doc
+
+# Add the merge_company_name function to the pipeline
+nlp.add_pipe(merge_company_name, after='parser')
+
+def get_dep_with_respect_to_root(sentence, company_name):
+    doc = nlp(sentence)
+
+    # Find the root of the sentence
+    root = None
+    for token in doc:
+        if token.dep_ == "ROOT":
+            root = token
+            break
+
+    # Find the path from the company name to the root
+    path = []
+    for token in doc:
+        if token.text in company_name:
+            token = token.head
+            while token is not root:
+                path.append(token.dep_)
+                token = token.head
+            path.append(root.dep_)
+            break
+
+    # Extract the dep_ label of the company name with respect to the root
+    dep_with_respect_to_root = path[-1]
+
+    return dep_with_respect_to_root
+
+# Define the sentence to be parsed
+sentence = "I met with someone from Boston Consultancy Group yesterday."
+
+# Get the dependency relation between the company name and the root of the sentence
+dep = get_dep_with_respect_to_root(sentence, company_name)
+
+# Print out the dependency relation
+print(dep)
