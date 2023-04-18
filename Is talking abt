@@ -1,0 +1,23 @@
+import spacy
+
+nlp = spacy.load("en_core_web_sm")
+
+def is_talking_about(sentence, input_word):
+    # Parse the sentence using spaCy
+    doc = nlp(sentence)
+
+    # Find the subject of the sentence
+    subject = None
+    for token in doc:
+        if token.dep_ == "nsubj":
+            subject = token
+            break
+
+    # Find the dependency path between the input word and the subject
+    if subject is not None:
+        input_token = doc[input_word]
+        path = list(input_token.ancestors) + [input_token]
+        if subject in path:
+            return True
+
+    return False
