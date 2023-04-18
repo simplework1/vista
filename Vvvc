@@ -1,0 +1,10 @@
+import spacy
+from spacy import displacy
+
+nlp = spacy.load("en_core_web_sm")
+
+sentence = "Cyberabad police issued notices to Big Basket, Phone Pe, Facebook and Tech Mahindra"
+doc = nlp(sentence)
+
+# Visualize the dependency parse tree
+displacy.render(doc, style="dep", options={"compact": True, "distance": 100})
