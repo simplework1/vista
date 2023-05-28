@@ -1,0 +1,26 @@
+import torch
+from transformers import AutoTokenizer, AutoModelForTokenClassification
+
+# Load the tokenizer and model
+tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
+model = AutoModelForTokenClassification.from_pretrained("distilbert-base-uncased")
+
+# Define the input sentence
+sentence = "I love playing soccer."
+
+# Tokenize the sentence
+tokens = tokenizer.tokenize(sentence)
+inputs = tokenizer.encode_plus(sentence, return_tensors="pt")
+
+# Run the model to get the dependency parsing predictions
+with torch.no_grad():
+    outputs = model(**inputs).logits
+
+# Get the predicted labels and their corresponding dependency arcs
+predicted_labels = torch.argmax(outputs, dim=2)[0]
+predicted_arcs = [(tokens[i], predicted_labels[i]) for i in range(len(tokens))]
+
+# Print the dependency arcs
+for arc in predicted_arcs:
+    token, label = arc
+    print(f"Token: {token}\tLabel: {label}")
